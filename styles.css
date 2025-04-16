@@ -1,0 +1,151 @@
+/* General Reset */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+  
+  body {
+    font-family: 'Segoe UI', sans-serif;
+    background: linear-gradient(to right, #e0f7fa, #ffffff);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 30px;
+    color: #333;
+  }
+  
+  /* Chat Container */
+  .chat-container {
+    width: 90%;
+    max-width: 600px;
+    background: #ffffff;
+    border-radius: 20px;
+    padding: 20px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    height: 500px;
+    overflow-y: auto;
+    position: relative;
+    animation: fadeInUp 0.6s ease;
+  }
+  
+  /* Chat Box */
+  .chat-box {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    overflow-y: auto;
+    flex-grow: 1;
+    padding-bottom: 10px;
+  }
+  
+  /* Message Styling */
+  .chat-message {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 14px;
+    border-radius: 14px;
+    max-width: 80%;
+    animation: popIn 0.3s ease;
+  }
+  
+  .user-message {
+    background-color: #d9f7be;
+    align-self: flex-end;
+    border-top-right-radius: 0;
+  }
+  
+  .bot-message {
+    background-color: #f0f0f0;
+    align-self: flex-start;
+    border-top-left-radius: 0;
+  }
+  
+  /* Avatar */
+  .avatar {
+    font-size: 20px;
+    margin-top: 2px;
+  }
+  
+  /* Input Section */
+  .input-container {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+  }
+  
+  input {
+    flex: 1;
+    padding: 12px;
+    border: 2px solid #ccc;
+    border-radius: 10px;
+    font-size: 15px;
+    outline: none;
+    transition: border 0.3s ease;
+  }
+  
+  input:focus {
+    border-color: #4caf50;
+  }
+  
+  button {
+    padding: 12px 16px;
+    border: none;
+    background-color: #4caf50;
+    color: white;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background-color 0.3s ease;
+  }
+  
+  button:hover {
+    background-color: #43a047;
+  }
+  
+  /* Suggested Questions */
+  .suggested-questions {
+    margin-top: 10px;
+    font-size: 14px;
+    color: #444;
+  }
+  
+  .suggested-questions a {
+    margin-right: 12px;
+    color: #007BFF;
+    cursor: pointer;
+    text-decoration: underline;
+    transition: color 0.2s ease;
+  }
+  
+  .suggested-questions a:hover {
+    color: #004A99;
+  }
+  
+  /* Animations */
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(15px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  @keyframes popIn {
+    from {
+      opacity: 0;
+      transform: scale(0.9);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+  

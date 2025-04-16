@@ -1,0 +1,1422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Financial Advisor Chatbot</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.1/chart.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #ff0088;
+            --secondary-color: #000100;
+            --light-green: #f2f2f2;
+            --bot-message-color: #d2a7a7;
+            --border-radius: 10px;
+            --box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            --font-family: 'Segoe UI', Arial, sans-serif;
+        }
+
+        body {
+            font-family: var(--font-family);
+            background-color: #000304;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .main-container {
+            display: flex;
+            width: 90%;
+            max-width: 1200px;
+            margin-top: 20px;
+            gap: 20px;
+        }
+
+        .chat-container {
+            flex: 3;
+            background-color: rgb(255, 255, 255);
+            padding: 20px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            display: flex;
+            flex-direction: column;
+            height: 80vh;
+            position: relative;
+        }
+
+        .finance-dashboard {
+            flex: 2;
+            background-color: rgb(0, 0, 0);
+            padding: 20px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            height: 80vh;
+            overflow-y: auto;
+        }
+
+        .tab-buttons {
+            display: flex;
+            margin-bottom: 15px;
+        }
+
+        .tab-button {
+            flex: 1;
+            padding: 10px;
+            background-color: #000000;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .tab-button:first-child {
+            border-top-left-radius: 5px;
+            border-bottom-left-radius: 5px;
+        }
+
+        .tab-button:last-child {
+            border-top-right-radius: 5px;
+            border-bottom-right-radius: 5px;
+        }
+
+        .tab-button.active {
+            background-color: var(--secondary-color);
+            color: rgb(0, 0, 0);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .dashboard-title {
+            font-size: 1.5em;
+            color: var(--primary-color);
+            margin: 0;
+        }
+
+        .chat-header {
+            background-color: var(--primary-color);
+            color: rgb(0, 0, 0);
+            padding: 15px;
+            border-radius: var(--border-radius) var(--border-radius) 0 0;
+            margin: -20px -20px 10px -20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chat-title {
+            margin: 0;
+            font-size: 1.3em;
+        }
+
+        .chat-box {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            padding-right: 10px;
+            margin-bottom: 10px;
+        }
+
+        .chat-message {
+            padding: 12px 15px;
+            margin: 5px 0;
+            border-radius: 18px;
+            max-width: 80%;
+            word-wrap: break-word;
+            animation: fadeIn 0.3s;
+            line-height: 1.4;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .user-message {
+            background-color: var(--light--blue);
+            align-self: flex-end;
+            border-bottom-right-radius: 5px;
+        }
+
+        .bot-message {
+            background-color: var(--bot-message-color);
+            align-self: flex-start;
+            border-bottom-left-radius: 5px;
+        }
+
+        .loading {
+            font-style: italic;
+            color: #fbfbfb;
+            align-self: flex-start;
+            padding: 5px 10px;
+            margin: 5px 0;
+        }
+
+        .input-container {
+            display: flex;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-radius: 0 0 var(--border-radius) var(--border-radius);
+            margin: 0 -20px -20px -20px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 25px;
+            box-sizing: border-box;
+            font-family: var(--font-family);
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--secondary-color);
+        }
+
+        button {
+            padding: 10px 20px;
+            margin-left: 10px;
+            border: none;
+            background-color: var(--secondary-color);
+            color: rgb(0, 234, 255);
+            border-radius: 25px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            font-family: var(--font-family);
+            font-weight: bold;
+        }
+
+        button:hover {
+            background-color: var(--primary-color);
+        }
+
+        .suggested-questions {
+            margin-top: 15px;
+            padding: 10px;
+            background-color: #00a6ff;
+            border-radius: 5px;
+        }
+
+        .suggested-questions h4 {
+            margin-top: 0;
+            margin-bottom: 10px;
+            color: #ffffff;
+            font-size: 0.9em;
+        }
+
+        .suggestion-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .suggestion-chip {
+            padding: 8px 12px;
+            background-color: #e0f2f1;
+            color: var(--primary-color);
+            border-radius: 20px;
+            font-size: 0.85em;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            border: 1px solid #000000;
+        }
+
+        .suggestion-chip:hover {
+            background-color: #00ffea;
+        }
+
+        .clear-chat {
+            background-color: #7100fb;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.8em;
+            border: none;
+        }
+
+        .clear-chat:hover {
+            background-color: #d32f2f;
+        }
+
+        .expense-form {
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+
+        .expense-list {
+            margin-top: 20px;
+        }
+
+        .expense-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            background-color: #f0f0f0;
+            border-radius: 5px;
+            margin-bottom: 8px;
+            border-left: 4px solid #4caf50;
+        }
+
+        .expense-category {
+            font-weight: bold;
+            color: #555;
+        }
+
+        .expense-amount {
+            font-weight: bold;
+            color: #f44336;
+        }
+
+        .expense-date {
+            color: #757575;
+            font-size: 0.85em;
+        }
+
+        .expense-description {
+            color: #555;
+            font-style: italic;
+            margin-top: 5px;
+        }
+
+        .budget-form {
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .budget-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            background-color: #f0f0f0;
+            border-radius: 5px;
+            margin-bottom: 8px;
+            border-left: 4px solid #2196f3;
+        }
+
+        .budget-category {
+            font-weight: bold;
+            color: #555;
+        }
+
+        .budget-limit {
+            font-weight: bold;
+            color: #2196f3;
+        }
+
+        .progress-container {
+            height: 10px;
+            background-color: #e0e0e0;
+            border-radius: 5px;
+            margin-top: 5px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background-color: #4caf50;
+        }
+
+        .progress-bar.warning {
+            background-color: #ff9800;
+        }
+
+        .progress-bar.danger {
+            background-color: #f44336;
+        }
+
+        .summary-card {
+            background-color: #e8f5e9;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .summary-header {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: var(--primary-color);
+        }
+
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .chart-container {
+            margin-top: 20px;
+            height: 300px;
+        }
+
+        .insights {
+            margin-top: 20px;
+        }
+
+        .insight-item {
+            background-color: #fff8e1;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            border-left: 4px solid #ffc107;
+        }
+
+        .insight-text {
+            color: #555;
+        }
+
+        .advisor-tip {
+            background-color: #e3f2fd;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            border-left: 4px solid #2196f3;
+        }
+
+        @media (max-width: 900px) {
+            .main-container {
+                flex-direction: column;
+            }
+            
+            .chat-container, .finance-dashboard {
+                height: auto;
+                max-height: 70vh;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <!-- Chat Section -->
+        <div class="chat-container">
+            <div class="chat-header">
+                <h2 class="chat-title">Financial Advisor Bot</h2>
+                <button class="clear-chat" onclick="clearChatHistory()">Clear Chat</button>
+            </div>
+            <div class="chat-box" id="chatBox"></div>
+            <div class="suggested-questions">
+                <h4>Suggested Questions:</h4>
+                <div class="suggestion-chips">
+                    <span class="suggestion-chip" onclick="suggestQuestion('How can I save money?')">How can I save money?</span>
+                    <span class="suggestion-chip" onclick="suggestQuestion('What is my spending this month?')">What is my spending this month?</span>
+                    <span class="suggestion-chip" onclick="suggestQuestion('How do I create a budget?')">How do I create a budget?</span>
+                    <span class="suggestion-chip" onclick="suggestQuestion('What are investment options?')">What are investment options?</span>
+                    <span class="suggestion-chip" onclick="suggestQuestion('How to reduce food expenses?')">How to reduce food expenses?</span>
+                </div>
+            </div>
+            <div class="input-container">
+                <input type="text" id="userInput" placeholder="Ask me about finances or expenses..." onkeypress="if(event.key === 'Enter') sendMessage()" />
+                <button onclick="sendMessage()">Send</button>
+            </div>
+        </div>
+
+        <!-- Finance Dashboard -->
+        <div class="finance-dashboard">
+            <div class="dashboard-header">
+                <h2 class="dashboard-title">Finance Dashboard</h2>
+            </div>
+            
+            <div class="tab-buttons">
+                <button class="tab-button active" onclick="switchTab('expenses')">Expenses</button>
+                <button class="tab-button" onclick="switchTab('budgets')">Budgets</button>
+                <button class="tab-button" onclick="switchTab('summary')">Summary</button>
+                <button class="tab-button" onclick="switchTab('insights')">Insights</button>
+            </div>
+
+            <!-- Expenses Tab -->
+            <div id="expenses" class="tab-content active">
+                <div class="expense-form">
+                    <h3>Add New Expense</h3>
+                    <div class="form-group">
+                        <label for="expenseAmount">Amount</label>
+                        <input type="number" id="expenseAmount" placeholder="Enter amount" min="0" step="0.01">
+                    </div>
+                    <div class="form-group">
+                        <label for="expenseCategory">Category</label>
+                        <select id="expenseCategory">
+                            <option value="Food">Food</option>
+                            <option value="Housing">Housing</option>
+                            <option value="Transportation">Transportation</option>
+                            <option value="Entertainment">Entertainment</option>
+                            <option value="Utilities">Utilities</option>
+                            <option value="Healthcare">Healthcare</option>
+                            <option value="Shopping">Shopping</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="expenseDescription">Description (optional)</label>
+                        <input type="text" id="expenseDescription" placeholder="Enter description">
+                    </div>
+                    <button onclick="addExpense()">Add Expense</button>
+                </div>
+
+                <h3>Recent Expenses</h3>
+                <div id="expenseList" class="expense-list">
+                    <!-- Expense items will be added here -->
+                </div>
+            </div>
+
+            <!-- Budgets Tab -->
+            <div id="budgets" class="tab-content">
+                <div class="budget-form">
+                    <h3>Set Budget Limit</h3>
+                    <div class="form-group">
+                        <label for="budgetCategory">Category</label>
+                        <select id="budgetCategory">
+                            <option value="Food">Food</option>
+                            <option value="Housing">Housing</option>
+                            <option value="Transportation">Transportation</option>
+                            <option value="Entertainment">Entertainment</option>
+                            <option value="Utilities">Utilities</option>
+                            <option value="Healthcare">Healthcare</option>
+                            <option value="Shopping">Shopping</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="budgetLimit">Monthly Limit</label>
+                        <input type="number" id="budgetLimit" placeholder="Enter limit" min="0" step="0.01">
+                    </div>
+                    <button onclick="setBudget()">Set Budget</button>
+                </div>
+
+                <h3>Current Budgets</h3>
+                <div id="budgetList">
+                    <!-- Budget items will be added here -->
+                </div>
+            </div>
+
+            <!-- Summary Tab -->
+            <div id="summary" class="tab-content">
+                <div class="summary-card">
+                    <div class="summary-header">Monthly Overview</div>
+                    <div class="summary-item">
+                        <span>Total Expenses:</span>
+                        <span id="totalExpenses">$0.00</span>
+                    </div>
+                    <div class="summary-item">
+                        <span>Budget Utilization:</span>
+                        <span id="budgetUtilization">0%</span>
+                    </div>
+                    <div class="summary-item">
+                        <span>Remaining Budget:</span>
+                        <span id="remainingBudget">$0.00</span>
+                    </div>
+                </div>
+
+                <div class="chart-container">
+                    <canvas id="expenseChart"></canvas>
+                </div>
+                
+            </div>
+
+            <!-- Insights Tab -->
+            <div id="insights" class="tab-content">
+                <div class="advisor-tip">
+                    <h3>Financial Advisor Tips</h3>
+                    <p>Based on your spending patterns, here are some tips to improve your financial health.</p>
+                </div>
+                
+                <div id="insightsList" class="insights">
+                    <!-- Insights will be added here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // DOM elements
+        const chatBox = document.getElementById('chatBox');
+        const userInput = document.getElementById('userInput');
+        let expenseChart = null;
+
+        // Initialize data structures
+        let expenses = JSON.parse(localStorage.getItem('expenses')) || [];
+        let budgets = JSON.parse(localStorage.getItem('budgets')) || [];
+        
+        // Comprehensive knowledge base
+        const knowledgeBase = {
+            // Financial concepts
+            "stocks": "Stocks represent ownership in a company. When you buy a stock, you own a small piece of that company and may receive dividends or sell at a profit if the stock value increases.",
+            "bonds": "Bonds are debt securities where you lend money to an entity (like a government or corporation) for a defined period at a fixed interest rate. They're generally considered less risky than stocks.",
+            "mutual funds": "Mutual funds pool money from many investors to purchase a diversified portfolio of stocks, bonds, or other securities, managed by professional investment managers.",
+            "etf": "ETFs (Exchange Traded Funds) are similar to mutual funds but trade on exchanges like stocks. They typically have lower fees and greater tax efficiency than mutual funds.",
+            "401k": "A 401(k) is an employer-sponsored retirement account where you can contribute pre-tax income, which grows tax-deferred until retirement.",
+            "ira": "An IRA (Individual Retirement Account) is a tax-advantaged account for retirement savings. Traditional IRAs offer tax-deductible contributions, while Roth IRAs offer tax-free withdrawals in retirement.",
+            "compound interest": "Compound interest is when you earn interest on both your initial investment and previously earned interest. Over time, this can significantly grow your savings.",
+            
+            // Budgeting and saving
+            "budget": "A budget is a spending plan based on income and expenses. Creating one helps you track where money goes, identify areas to cut back, and ensure you're saving enough.",
+            "budgeting": "Budgeting is the process of creating a plan for your money. Start by tracking income and expenses, then set realistic limits for each spending category.",
+            "emergency fund": "An emergency fund is money saved for unexpected expenses like medical bills or car repairs. Aim to save 3-6 months of living expenses.",
+            "50/30/20 rule": "The 50/30/20 rule suggests allocating 50% of income to needs, 30% to wants, and 20% to savings and debt repayment.",
+            "saving": "Saving money is setting aside income for future use. Try automating transfers to savings accounts on payday to make it easier.",
+            
+            // Debt management
+            "debt": "Debt is money borrowed that must be repaid, usually with interest. Focus on paying high-interest debt first while making minimum payments on other debts.",
+            "credit score": "Your credit score is a number that represents your creditworthiness. Factors affecting it include payment history, credit utilization, and length of credit history.",
+            "credit card": "Credit cards allow you to borrow money up to a certain limit. Pay the full balance each month to avoid interest charges.",
+            "loan": "A loan is money borrowed that must be repaid with interest. Common types include mortgages, auto loans, personal loans, and student loans.",
+            
+            // Expense reduction strategies
+            "reduce food expenses": "To reduce food expenses: plan meals before shopping, use a grocery list, buy in bulk, choose store brands, limit eating out, use coupons, and reduce food waste.",
+            "lower utility bills": "To lower utility bills: adjust thermostat settings, use energy-efficient appliances, fix leaky faucets, take shorter showers, and unplug electronics when not in use.",
+            "save on transportation": "To save on transportation: maintain your vehicle regularly, carpool, use public transportation, walk or bike for short trips, and compare gas prices.",
+            "reduce entertainment costs": "To reduce entertainment costs: use streaming services instead of cable, look for free community events, use library resources, and limit subscription services.",
+            
+            // Investment advice
+            "investment": "Investing means putting money into assets with the expectation of generating income or profit. Common investments include stocks, bonds, real estate, and mutual funds.",
+            "diversification": "Diversification means spreading investments across different asset types to reduce risk. Don't put all your eggs in one basket.",
+            "risk tolerance": "Risk tolerance is your ability to endure market volatility. Consider your age, financial goals, and comfort with market fluctuations when investing.",
+            "retirement planning": "Retirement planning involves determining retirement income goals and the actions needed to achieve them. Start early to benefit from compound growth."
+        };
+        
+        // NLP-lite functions
+        function findBestMatch(input) {
+            input = input.toLowerCase().trim();
+            
+            // Direct match in knowledge base
+            for (const [key, value] of Object.entries(knowledgeBase)) {
+                if (input.includes(key)) {
+                    return value;
+                }
+            }
+            
+            // Check for expense-related queries
+            if (input.includes("spend") || input.includes("expense") || input.includes("spent") || 
+                input.includes("cost") || input.includes("paid")) {
+                
+                if (input.includes("this month") || input.includes("monthly")) {
+                    return getMonthlyExpenseSummary();
+                }
+                
+                // Check for category-specific queries
+                const categories = ["food", "housing", "transportation", "entertainment", 
+                                   "utilities", "healthcare", "shopping"];
+                
+                for (const category of categories) {
+                    if (input.includes(category)) {
+                        return getCategoryExpenseSummary(category);
+                    }
+                }
+                
+                return "You can view your expenses in the Expenses tab. Would you like to know about a specific category or time period?";
+            }
+            
+            // Budget-related queries
+            if (input.includes("budget") || input.includes("limit") || input.includes("spending limit")) {
+                return "You can set and track your budgets in the Budgets tab. Setting realistic budgets for each spending category helps you manage your finances better.";
+            }
+            
+            // Savings advice
+            if (input.includes("save") || input.includes("saving")) {
+                return generateSavingAdvice();
+            }
+            
+            // Request for financial advice
+            if (input.includes("advice") || input.includes("tip") || input.includes("help") || 
+                input.includes("suggest")) {
+                return generateFinancialAdvice();
+            }
+            
+            // Fallback for unknown queries
+            return "I'm not sure how to answer that specific question. You can ask me about financial concepts, your expenses, budgeting advice, or saving strategies.";
+        }
+        
+        function generateSavingAdvice() {
+            const savingTips = [
+                "Try the 50/30/20 rule: allocate 50% of income to needs, 30% to wants, and 20% to savings.",
+                "Set up automatic transfers to your savings account on payday.",
+                "Cut unnecessary subscriptions. Review your monthly subscriptions and cancel those you rarely use.",
+                "Use the 24-hour rule for large purchases - wait a day before buying to avoid impulse spending.",
+                "Shop with a list and stick to it to avoid impulse purchases.",
+                "Look for no-fee banking options to avoid unnecessary charges.",
+                "Consider meal planning to reduce food expenses and waste.",
+                "Use cashback apps and credit cards that offer rewards on purchases you already make."
+            ];
+            
+            // Analyze expenses to provide personalized advice
+            if (expenses.length > 0) {
+                // Find highest spending category
+                const categorySums = {};
+                expenses.forEach(expense => {
+                    categorySums[expense.category] = (categorySums[expense.category] || 0) + expense.amount;
+                });
+                
+                let highestCategory = "";
+                let highestAmount = 0;
+                
+                for (const [category, amount] of Object.entries(categorySums)) {
+                    if (amount > highestAmount) {
+                        highestAmount = amount;
+                        highestCategory = category;
+                    }
+                }
+                
+                if (highestCategory) {
+                    return `I notice your highest spending is in the ${highestCategory} category. Here's a tip: ${getCategorySpecificAdvice(highestCategory)}`;
+                }
+            }
+            
+            // Return random general saving advice if no specific advice is applicable
+            return savingTips[Math.floor(Math.random() * savingTips.length)];
+        }
+        
+        function getCategorySpecificAdvice(category) {
+            const categoryAdvice = {
+                "Food": "Try meal planning, buying groceries in bulk, and limiting eating out to reduce food costs.",
+                "Housing": "Consider negotiating rent/mortgage rates, refinancing, or finding a roommate to share housing costs.",
+                "Transportation": "Carpooling, using public transit, or biking can significantly reduce transportation expenses.",
+                "Entertainment": "Look for free community events, use library resources, and limit subscription services.",
+                "Utilities": "Reduce energy usage by adjusting thermostat, using energy-efficient appliances, and being mindful of water usage.",
+                "Healthcare": "Review insurance options annually, use generic medications when possible, and focus on preventive care.",
+                "Shopping": "Make a shopping list and stick to it, wait for sales, and consider second-hand options for certain items."
+            };
+            
+            return categoryAdvice[category] || "Track your spending in this category closely and look for specific items you can reduce.";
+        }
+        
+        function generateFinancialAdvice() {
+            // General financial advice based on user's data
+            if (expenses.length === 0) {
+                return "Start by tracking your expenses for at least a month to understand your spending patterns. This will help identify areas where you can save money.";
+            }
+            
+            // Check budget utilization
+            if (budgets.length > 0) {
+                const overBudgetCategories = [];
+                
+                budgets.forEach(budget => {
+                    const categoryExpenses = expenses
+                        .filter(expense => expense.category === budget.category)
+                        .reduce((sum, expense) => sum + expense.amount, 0);
+                    
+                    if (categoryExpenses > budget.limit) {
+                        overBudgetCategories.push(budget.category);
+                    }
+                });
+                
+                if (overBudgetCategories.length > 0) {
+                    return `You're currently over budget in these categories: ${overBudgetCategories.join(', ')}. Consider reviewing your spending in these areas or adjusting your budget if needed.`;
+                }
+            }
+            
+            // Check if saving enough
+            const totalIncome = calculateTotalIncome();
+            const totalExpenses = expenses.reduce((sum, expense) => sum + expense.amount, 0);
+            const savingsRate = (totalIncome - totalExpenses) / totalIncome;
+            
+            if (savingsRate < 0.2 && totalIncome > 0) {
+                return "Financial experts recommend saving at least 20% of your income. Based on your current spending, you might want to look for additional ways to reduce expenses or increase income to boost your savings rate.";
+            }
+            
+            // Default advice
+            const generalAdvice = [
+                "Consider building an emergency fund with 3-6 months of living expenses if you don't already have one.",
+                "Review your recurring subscriptions and cancel those you don't use regularly.",
+                "Pay off high-interest debt first, while making minimum payments on other debts.",
+                "Consider increasing retirement contributions, especially if your employer offers matching.",
+                "Review your insurance coverage annually to ensure you're adequately protected without overpaying."
+            ];
+            
+            return generalAdvice[Math.floor(Math.random() * generalAdvice.length)];
+        }
+        
+        // Placeholder function - in a real app, this would track income
+        function calculateTotalIncome() {
+            // For demo purposes, we'll return a fixed value
+            return 5000;
+        }
+        
+        function getMonthlyExpenseSummary() {
+            if (expenses.length === 0) {
+                return "You haven't recorded any expenses yet. You can add them in the Expenses tab.";
+            }
+            
+            const currentDate = new Date();
+            const currentMonth = currentDate.getMonth();
+            const currentYear = currentDate.getFullYear();
+            
+            const monthlyExpenses = expenses.filter(expense => {
+                const expenseDate = new Date(expense.date);
+                return expenseDate.getMonth() === currentMonth && 
+                       expenseDate.getFullYear() === currentYear;
+            });
+            
+            const total = monthlyExpenses.reduce((sum, expense) => sum + expense.amount, 0);
+            
+            if (monthlyExpenses.length === 0) {
+                return "You don't have any recorded expenses for this month yet.";
+            }
+            
+            // Get top categories
+            const categorySums = {};
+            monthlyExpenses.forEach(expense => {
+                categorySums[expense.category] = (categorySums[expense.category] || 0) + expense.amount;
+            });
+            
+            const sortedCategories = Object.entries(categorySums)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 3);
+            
+            let topCategoriesText = "Your top spending categories this month are: ";
+            sortedCategories.forEach(([category, amount], index) => {
+                topCategoriesText += `${category} ($${amount.toFixed(2)})`;
+                if (index < sortedCategories.length - 1) {
+                    topCategoriesText += ", ";
+                }
+            });
+            
+            return `This month, you've spent a total of $${total.toFixed(2)}. ${topCategoriesText}.`;
+        }
+        
+        function getCategoryExpenseSummary(category) {
+            // Capitalize first letter for consistent category matching
+            category = category.charAt(0).toUpperCase() + category.slice(1);
+            
+            const categoryExpenses = expenses.filter(expense => 
+                expense.category.toLowerCase() === category.toLowerCase()
+            );
+            
+            if (categoryExpenses.length === 0) {
+                return `You haven't recorded any expenses in the ${category} category yet.`;
+            }
+            
+            const total = categoryExpenses.reduce((sum, expense) => sum + expense.amount, 0);
+            const currentDate = new Date();
+            const currentMonth = currentDate.getMonth();
+            const currentYear = currentDate.getFullYear();
+            
+            // Get monthly expenses for this category
+            const monthlyCategoryExpenses = categoryExpenses.filter(expense => {
+                const expenseDate = new Date(expense.date);
+                return expenseDate.getMonth() === currentMonth && 
+                       expenseDate.getFullYear() === currentYear;
+            });
+            
+            const monthlyTotal = monthlyCategoryExpenses.reduce((sum, expense) => sum + expense.amount, 0);
+            
+            // Check if there's a budget for this category
+            const categoryBudget = budgets.find(budget => 
+                budget.category.toLowerCase() === category.toLowerCase()
+            );
+            
+            let budgetInfo = "";
+            if (categoryBudget) {
+                const percentUsed = (monthlyTotal / categoryBudget.limit) * 100;
+                budgetInfo = `You've used ${percentUsed.toFixed(1)}% of your ${category} budget this month.`;
+            }
+            
+            return `You've spent a total of $${total.toFixed(2)} on ${category} overall, with $${monthlyTotal.toFixed(2)} spent this month. ${budgetInfo}`;
+        }
+        
+        // Initialize chat
+        function initChat() {
+            let history = localStorage.getItem('chatHistory');
+            if (history) {
+                chatBox.innerHTML = history;
+                chatBox.scrollTop = chatBox.scrollHeight;
+            } else {
+                // Welcome message
+                displayMessage("Hi there! I'm your financial advisor bot. I can help with financial concepts, track your expenses, and provide personalized advice. What would you like to know?", 'bot-message');
+            }
+            
+            // Initialize dashboard
+            displayExpenses();
+            displayBudgets();
+            updateSummary();
+            generateInsights();
+            createExpenseChart();
+        }
+        
+        // Chat functions
+        function displayMessage(message, className) {
+            const messageElement = document.createElement('div');
+            messageElement.classList.add('chat-message', className);
+            messageElement.textContent = message;
+            chatBox.appendChild(messageElement);
+            chatBox.scrollTop = chatBox.scrollHeight;
+            
+            // Save chat history
+            localStorage.setItem('chatHistory', chatBox.innerHTML);
+        }
+        
+        function sendMessage() {
+            const message = userInput.value.trim();
+            if (message === "") return;
+            
+            // Display user message
+            displayMessage(message, 'user-message');
+            userInput.value = "";
+            
+            // Show thinking indicator
+            const loadingElement = document.createElement('div');
+            loadingElement.classList.add('loading');
+            loadingElement.textContent = "Thinking...";
+            chatBox.appendChild(loadingElement);
+            chatBox.scrollTop = chatBox.scrollHeight;
+            
+            // Process with a small delay to show the "thinking" state
+            setTimeout(() => {
+                // Remove loading indicator
+                chatBox.removeChild(loadingElement);
+                
+                // Get and display bot response
+                const response = findBestMatch(message);
+                displayMessage(response, 'bot-message');
+            }, 1000);
+        }
+        
+        function suggestQuestion(question) {
+            userInput.value = question;
+            sendMessage();
+        }
+        
+        function clearChatHistory() {
+            if (confirm("Are you sure you want to clear the chat history?")) {
+                localStorage.removeItem('chatHistory');
+                chatBox.innerHTML = '';
+                displayMessage("Hi there! I'm your financial advisor bot. I can help with financial concepts, track your expenses, and provide personalized advice. What would you like to know?", 'bot-message');
+            }
+        }
+        
+        // Expense functions
+        function addExpense() {
+            const amount = parseFloat(document.getElementById('expenseAmount').value);
+            const category = document.getElementById('expenseCategory').value;
+            const description = document.getElementById('expenseDescription').value;
+            
+            if (isNaN(amount) || amount <= 0) {
+                alert("Please enter a valid amount");
+                return;
+            }
+            
+            const expense = {
+                id: Date.now(),
+                amount: amount,
+                category: category,
+                description: description || category,
+                date: new Date().toISOString()
+            };
+            
+            expenses.push(expense);
+            localStorage.setItem('expenses', JSON.stringify(expenses));
+            
+            // Reset form
+            document.getElementById('expenseAmount').value = "";
+            document.getElementById('expenseDescription').value = "";
+            
+            // Update UI
+            displayExpenses();
+            updateSummary();
+            updateExpenseChart();
+            generateInsights();
+            
+            // Show confirmation
+            displayMessage(`I've recorded your ${category} expense of $${amount.toFixed(2)}`, 'bot-message');
+        }
+        
+        function displayExpenses() {
+            const expenseList = document.getElementById('expenseList');
+            expenseList.innerHTML = "";
+            
+            // Sort expenses by date, newest first
+            const sortedExpenses = [...expenses].sort((a, b) => 
+                new Date(b.date) - new Date(a.date)
+            );
+            
+            // Show only the last 10 expenses
+            const recentExpenses = sortedExpenses.slice(0, 10);
+            
+            if (recentExpenses.length === 0) {
+                expenseList.innerHTML = "<p>No expenses recorded yet.</p>";
+                return;
+            }
+            
+            recentExpenses.forEach(expense => {
+                const expenseDate = new Date(expense.date);
+                const formattedDate = expenseDate.toLocaleDateString();
+                
+                const expenseItem = document.createElement('div');
+                expenseItem.classList.add('expense-item');
+                expenseItem.innerHTML = `
+                    <div>
+                        <div class="expense-category">${expense.category}</div>
+                        <div class="expense-description">${expense.description}</div>
+                        <div class="expense-date">${formattedDate}</div>
+                    </div>
+                    <div class="expense-amount">$${expense.amount.toFixed(2)}</div>
+                `;
+                
+                // Add delete button
+                const deleteBtn = document.createElement('button');
+                deleteBtn.innerText = '×';
+                deleteBtn.style.marginLeft = '10px';
+                deleteBtn.style.backgroundColor = '#f44336';
+                deleteBtn.style.color = 'white';
+                deleteBtn.style.border = 'none';
+                deleteBtn.style.borderRadius = '50%';
+                deleteBtn.style.width = '25px';
+                deleteBtn.style.height = '25px';
+                deleteBtn.style.cursor = 'pointer';
+                deleteBtn.onclick = () => deleteExpense(expense.id);
+                
+                expenseItem.querySelector('.expense-amount').appendChild(deleteBtn);
+                expenseList.appendChild(expenseItem);
+            });
+        }
+        
+        function deleteExpense(id) {
+            expenses = expenses.filter(expense => expense.id !== id);
+            localStorage.setItem('expenses', JSON.stringify(expenses));
+            
+            // Update UI
+            displayExpenses();
+            updateSummary();
+            updateExpenseChart();
+            generateInsights();
+        }
+        
+        // Budget functions
+        function setBudget() {
+            const category = document.getElementById('budgetCategory').value;
+            const limit = parseFloat(document.getElementById('budgetLimit').value);
+            
+            if (isNaN(limit) || limit <= 0) {
+                alert("Please enter a valid budget limit");
+                return;
+            }
+            
+            // Check if budget for this category already exists
+            const existingBudgetIndex = budgets.findIndex(b => b.category === category);
+            
+            if (existingBudgetIndex >= 0) {
+                budgets[existingBudgetIndex].limit = limit;
+            } else {
+                budgets.push({
+                    category: category,
+                    limit: limit
+                });
+            }
+            
+            localStorage.setItem('budgets', JSON.stringify(budgets));
+            
+            // Reset form
+            document.getElementById('budgetLimit').value = "";
+            
+            // Update UI
+            displayBudgets();
+            updateSummary();
+            generateInsights();
+            
+            // Show confirmation
+            displayMessage(`I've set your ${category} budget to $${limit.toFixed(2)} per month`, 'bot-message');
+        }
+        
+        function displayBudgets() {
+            const budgetList = document.getElementById('budgetList');
+            budgetList.innerHTML = "";
+            
+            if (budgets.length === 0) {
+                budgetList.innerHTML = "<p>No budgets set yet.</p>";
+                return;
+            }
+            
+            budgets.forEach(budget => {
+                // Calculate current spending in this category this month
+                const currentDate = new Date();
+                const currentMonth = currentDate.getMonth();
+                const currentYear = currentDate.getFullYear();
+                
+                const categoryExpenses = expenses.filter(expense => {
+                    const expenseDate = new Date(expense.date);
+                    return expense.category === budget.category && 
+                           expenseDate.getMonth() === currentMonth && 
+                           expenseDate.getFullYear() === currentYear;
+                });
+                
+                const spent = categoryExpenses.reduce((sum, expense) => sum + expense.amount, 0);
+                const percentUsed = (spent / budget.limit) * 100;
+                
+                const budgetItem = document.createElement('div');
+                budgetItem.classList.add('budget-item');
+                
+                let progressClass = '';
+                if (percentUsed >= 90) {
+                    progressClass = 'danger';
+                } else if (percentUsed >= 75) {
+                    progressClass = 'warning';
+                }
+                
+                budgetItem.innerHTML = `
+                    <div style="width: 100%;">
+                        <div style="display: flex; justify-content: space-between;">
+                            <span class="budget-category">${budget.category}</span>
+                            <span class="budget-limit">$${spent.toFixed(2)} / $${budget.limit.toFixed(2)}</span>
+                        </div>
+                        <div class="progress-container">
+                            <div class="progress-bar ${progressClass}" style="width: ${Math.min(percentUsed, 100)}%"></div>
+                        </div>
+                    </div>
+                `;
+                
+                // Add delete button
+                const deleteBtn = document.createElement('button');
+                deleteBtn.innerText = '×';
+                deleteBtn.style.marginLeft = '10px';
+                deleteBtn.style.backgroundColor = '#f44336';
+                deleteBtn.style.color = 'white';
+                deleteBtn.style.border = 'none';
+                deleteBtn.style.borderRadius = '50%';
+                deleteBtn.style.width = '25px';
+                deleteBtn.style.height = '25px';
+                deleteBtn.style.cursor = 'pointer';
+                deleteBtn.onclick = () => deleteBudget(budget.category);
+                
+                budgetItem.appendChild(deleteBtn);
+                budgetList.appendChild(budgetItem);
+            });
+        }
+        
+        function deleteBudget(category) {
+            budgets = budgets.filter(budget => budget.category !== category);
+            localStorage.setItem('budgets', JSON.stringify(budgets));
+            
+            // Update UI
+            displayBudgets();
+            updateSummary();
+            generateInsights();
+        }
+        
+        // Summary and Charts
+        function updateSummary() {
+            // Calculate total expenses this month
+            const currentDate = new Date();
+            const currentMonth = currentDate.getMonth();
+            const currentYear = currentDate.getFullYear();
+            
+            const monthlyExpenses = expenses.filter(expense => {
+                const expenseDate = new Date(expense.date);
+                return expenseDate.getMonth() === currentMonth && 
+                       expenseDate.getFullYear() === currentYear;
+            });
+            
+            const totalExpensesAmount = monthlyExpenses.reduce((sum, expense) => sum + expense.amount, 0);
+            
+            // Calculate total budget
+            const totalBudget = budgets.reduce((sum, budget) => sum + budget.limit, 0);
+            
+            // Update summary elements
+            document.getElementById('totalExpenses').textContent = `$${totalExpensesAmount.toFixed(2)}`;
+            
+            if (totalBudget > 0) {
+                const utilization = (totalExpensesAmount / totalBudget) * 100;
+                document.getElementById('budgetUtilization').textContent = `${utilization.toFixed(1)}%`;
+                document.getElementById('remainingBudget').textContent = `$${(totalBudget - totalExpensesAmount).toFixed(2)}`;
+            } else {
+                document.getElementById('budgetUtilization').textContent = "No budget set";
+                document.getElementById('remainingBudget').textContent = "N/A";
+            }
+        }
+        
+        function createExpenseChart() {
+            const ctx = document.getElementById('expenseChart').getContext('2d');
+            
+            // Prepare data for chart
+            const categoryData = prepareCategoryData();
+            
+            expenseChart = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: categoryData.categories,
+                    datasets: [{
+                        data: categoryData.amounts,
+                        backgroundColor: [
+                            '#4caf50', '#8bc34a', '#cddc39', '#ffeb3b', 
+                            '#ffc107', '#ff9800', '#ff5722', '#795548'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right'
+                        },
+                        title: {
+                            display: true,
+                            text: 'Monthly Expenses by Category'
+                        }
+                    }
+                }
+            });
+        }
+        
+        function updateExpenseChart() {
+            if (!expenseChart) {
+                createExpenseChart();
+                return;
+            }
+            
+            const categoryData = prepareCategoryData();
+            
+            expenseChart.data.labels = categoryData.categories;
+            expenseChart.data.datasets[0].data = categoryData.amounts;
+            expenseChart.update();
+        }
+        
+        function prepareCategoryData() {
+            // Get current month expenses
+            const currentDate = new Date();
+            const currentMonth = currentDate.getMonth();
+            const currentYear = currentDate.getFullYear();
+            
+            const monthlyExpenses = expenses.filter(expense => {
+                const expenseDate = new Date(expense.date);
+                return expenseDate.getMonth() === currentMonth && 
+                       expenseDate.getFullYear() === currentYear;
+            });
+            
+            // Group by category
+            const categorySums = {};
+            monthlyExpenses.forEach(expense => {
+                categorySums[expense.category] = (categorySums[expense.category] || 0) + expense.amount;
+            });
+            
+            // Convert to arrays for chart
+            const categories = Object.keys(categorySums);
+            const amounts = categories.map(category => categorySums[category]);
+            
+            return { categories, amounts };
+        }
+        
+        // Generate insights based on spending patterns
+        function generateInsights() {
+            const insightsList = document.getElementById('insightsList');
+            insightsList.innerHTML = "";
+            
+            if (expenses.length === 0) {
+                insightsList.innerHTML = "<p>Add some expenses to get personalized insights.</p>";
+                return;
+            }
+            
+            // Current month data
+            const currentDate = new Date();
+            const currentMonth = currentDate.getMonth();
+            const currentYear = currentDate.getFullYear();
+            
+            const monthlyExpenses = expenses.filter(expense => {
+                const expenseDate = new Date(expense.date);
+                return expenseDate.getMonth() === currentMonth && 
+                       expenseDate.getFullYear() === currentYear;
+            });
+            
+            // Check budget status
+            budgets.forEach(budget => {
+                const categoryExpenses = monthlyExpenses
+                    .filter(expense => expense.category === budget.category)
+                    .reduce((sum, expense) => sum + expense.amount, 0);
+                
+                const percentUsed = (categoryExpenses / budget.limit) * 100;
+                
+                if (percentUsed >= 90) {
+                    addInsight(`⚠️ You've used ${percentUsed.toFixed(1)}% of your ${budget.category} budget this month. Consider reducing spending in this category.`);
+                } else if (percentUsed <= 30 && currentDate.getDate() >= 20) {
+                    addInsight(`👍 You're well under your ${budget.category} budget this month. Great job managing your ${budget.category.toLowerCase()} expenses!`);
+                }
+            });
+            
+            // Analyze spending trends
+            if (monthlyExpenses.length >= 5) {
+                // Group by category
+                const categorySums = {};
+                monthlyExpenses.forEach(expense => {
+                    categorySums[expense.category] = (categorySums[expense.category] || 0) + expense.amount;
+                });
+                
+                // Find highest category
+                let highestCategory = "";
+                let highestAmount = 0;
+                
+                for (const [category, amount] of Object.entries(categorySums)) {
+                    if (amount > highestAmount) {
+                        highestAmount = amount;
+                        highestCategory = category;
+                    }
+                }
+                
+                if (highestCategory) {
+                    addInsight(`📊 Your highest spending category is ${highestCategory} at $${highestAmount.toFixed(2)} this month. ${getCategorySpecificAdvice(highestCategory)}`);
+                }
+            }
+            
+            // Add general financial tip
+            const financialTips = [
+                "💡 Setting aside just 5% of your income in a high-yield savings account can build a robust emergency fund over time.",
+                "💡 Consider the 50/30/20 rule: 50% for needs, 30% for wants, and 20% for savings and debt repayment.",
+                "💡 Review your subscriptions monthly - many people pay for services they rarely use.",
+                "💡 Try a no-spend challenge for non-essential items for one week each month to boost savings.",
+                "💡 Pay yourself first by automatically transferring money to savings on payday before spending."
+            ];
+            
+            addInsight(financialTips[Math.floor(Math.random() * financialTips.length)]);
+            
+            function addInsight(text) {
+                const insightItem = document.createElement('div');
+                insightItem.classList.add('insight-item');
+                insightItem.innerHTML = `<div class="insight-text">${text}</div>`;
+                insightsList.appendChild(insightItem);
+            }
+        }
+        
+        // Tab switching
+        function switchTab(tabId) {
+            // Update tab buttons
+            const tabButtons = document.querySelectorAll('.tab-button');
+            tabButtons.forEach(button => {
+                button.classList.remove('active');
+            });
+            
+            const activeButton = document.querySelector(`.tab-button[onclick="switchTab('${tabId}')"]`);
+            activeButton.classList.add('active');
+            
+            // Update tab content
+            const tabContents = document.querySelectorAll('.tab-content');
+            tabContents.forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            document.getElementById(tabId).classList.add('active');
+        }
+        
+        // Initialize everything on load
+        window.onload = function() {
+            initChat();
+            
+            // Add Enter key support for chat input
+            userInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    sendMessage();
+                }
+            });
+        };
+        function renderExtraCharts() {
+    // Prepare monthly data
+    const monthlyData = prepareCategoryData();
+
+    // Pie Chart (monthly)
+    const pieCtx = document.getElementById('extraPieChart').getContext('2d');
+    new Chart(pieCtx, {
+        type: 'pie',
+        data: {
+            labels: monthlyData.categories,
+            datasets: [{
+                data: monthlyData.amounts,
+                backgroundColor: [
+                    '#FF5733', '#33FF57', '#3357FF', '#FF33A1',
+                    '#FF8C00', '#FFD700', '#8A2BE2', '#00FA9A'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Monthly Expenses by Category (Extra Pie)'
+                },
+                legend: { position: 'bottom' }
+            }
+        }
+    });
+
+    // Bar Chart (monthly)
+    const barCtx = document.getElementById('extraBarChart').getContext('2d');
+    new Chart(barCtx, {
+        type: 'bar',
+        data: {
+            labels: monthlyData.categories,
+            datasets: [{
+                label: 'Expense Amount',
+                data: monthlyData.amounts,
+                backgroundColor: '#7B1FA2'
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Monthly Expenses by Category (Extra Bar)'
+                }
+            },
+            scales: {
+                y: { beginAtZero: true }
+            }
+        }
+    });
+}
+
+// Call after everything else is loaded
+window.addEventListener('load', () => {
+    renderExtraCharts();
+});
+
+    </script>
+    <!-- Additional Graphs -->
+<div class="chart-container" style="width: 30%; max-width: 400px; margin: 40px auto;">
+    <canvas id="extraPieChart"></canvas>
+</div>
+<div class="chart-container" style="width: 30%; max-width: 400px; margin: 40px auto;">
+    <canvas id="extraBarChart"></canvas>
+</div>
+
+
+</body>
+
+</html>
