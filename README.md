@@ -2,7 +2,8 @@
 
 A modern, sleek, and responsive chat interface designed using HTML, CSS, and JavaScript. This front-end UI mimics a real-time chatbot experience with animated message bubbles, avatars, and suggested prompts.
 
-![Chat UI Screenshot](preview.png) <!-- Replace with actual screenshot path -->
+![Chat UI Screenshot](![image](https://github.com/user-attachments/assets/105d039a-2757-465c-8634-e1a20549470c)
+) <!-- Replace with actual screenshot path -->
 
 ---
 
